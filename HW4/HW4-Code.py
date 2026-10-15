@@ -36,9 +36,8 @@ def apply_cnot(basis_id):
 #cnot_truth_table = {"00": "00", "01": "00", "10": "00", "11": "00"}
 cnot_truth_table = {"00": "00", "01": "01", "10": "11", "11": "10"}
 
-
-# Run your QNode with various inputs to help fill in your truth table
 print(apply_cnot(0))
+
 #I.12.2 =====
 dev = qp.device("default.qubit", wires=2)
 
@@ -49,11 +48,7 @@ def apply_h_cnot():
     # YOUR CODE HERE #
     ##################
 
-    # APPLY THE OPERATIONS IN THE CIRCUIT
-    # Apply Hadamard on qubit 0
     qp.Hadamard(wires=0)
-
-    # Apply CNOT with control qubit 0 and target qubit 1
     qp.CNOT(wires=[0, 1])
 
     return qp.state()
@@ -89,20 +84,14 @@ def controlled_rotations(theta, phi, omega):
     # YOUR CODE HERE #
     ##################
 
-    # APPLY THE OPERATIONS IN THE CIRCUIT AND RETURN MEASUREMENT PROBABILITIES
-    # 1. Hadamard on qubit 0
     qp.Hadamard(wires=0)
 
-    # 2. Controlled-Rx with control=0, target=1
     qp.CRX(theta, wires=[0, 1])
 
-    # 3. Controlled-Ry with control=1, target=2
     qp.CRY(phi, wires=[1, 2])
 
-    # 4. Controlled-Rz with control=2, target=0
     qp.CRZ(omega, wires=[2, 0])
 
-    # 5. Return measurement probabilities for the 3-qubit basis states
     return qp.probs(wires=[0, 1, 2])
 
 
@@ -166,7 +155,6 @@ def apply_swap(phi, theta, omega):
     # YOUR CODE HERE #
     ##################
 
-    # IMPLEMENT THE REGULAR SWAP GATE HERE
     qp.SWAP(wires=[0,1])
 
     return qp.state()
@@ -180,7 +168,6 @@ def apply_swap_with_cnots(phi, theta, omega):
     # YOUR CODE HERE #
     ##################
 
-    # IMPLEMENT THE SWAP GATE USING A SEQUENCE OF CNOTS
     qp.CNOT(wires=[0, 1])
     qp.CNOT(wires=[1, 0])
     qp.CNOT(wires=[0, 1])
@@ -217,7 +204,6 @@ def controlled_swap(phi, theta, omega):
     # YOUR CODE HERE #
     ##################
 
-    # PERFORM A CONTROLLED SWAP USING A SEQUENCE OF TOFFOLIS
     qp.Toffoli(wires=[0, 1, 2])
     qp.Toffoli(wires=[0, 2, 1])
     qp.Toffoli(wires=[0, 1, 2])
@@ -239,12 +225,10 @@ def four_qubit_mcx():
     # YOUR CODE HERE #
     ##################
 
-    # IMPLEMENT THE CIRCUIT ABOVE USING A 4-QUBIT MULTI-CONTROLLED X
     qp.Hadamard(wires=0)
     qp.Hadamard(wires=1)
     qp.Hadamard(wires=2)
 
-    # 2. Apply multi-controlled X gate with control values |001>
     qp.MultiControlledX(wires=[0, 1, 2, 3], control_values=[0, 0, 1])
 
     return qp.state()
@@ -273,14 +257,10 @@ def four_qubit_mcx_only_tofs():
     # YOUR CODE HERE #
     ##################
 
-    # IMPLEMENT A 3-CONTROLLED NOT WITH TOFFOLIS
-    # 1. Compute AND of controls 0 and 1 into auxiliary wire 3
     qp.Toffoli(wires=[0, 1, 3])
 
-    # 2. Compute AND of auxiliary wire 3 and control 2 into target wire 4
     qp.Toffoli(wires=[2, 3, 4])
 
-    # 3. Uncompute auxiliary wire 3 back to |0>
     qp.Toffoli(wires=[0, 1, 3])
 
     return qp.state()
@@ -363,8 +343,6 @@ def apply_control_sequence(state):
     if state[1] == 1:
         qp.PauliX(wires=1)
 
-    # Set up initial state of the third qubit - use |->
-    # so we can see the effect on the output
     qp.PauliX(wires=2)
     qp.Hadamard(wires=2)
 
@@ -372,14 +350,10 @@ def apply_control_sequence(state):
     # YOUR CODE HERE #
     ##################
 
-    # IMPLEMENT THE MULTIPLEXER
-    # IF STATE OF FIRST TWO QUBITS IS 01, APPLY X TO THIRD QUBIT
     qp.ctrl(qp.PauliX, control=[0, 1], control_values=[0, 1])(wires=2)
 
-    # IF STATE OF FIRST TWO QUBITS IS 10, APPLY Z TO THIRD QUBIT
     qp.ctrl(qp.PauliZ, control=[0, 1], control_values=[1, 0])(wires=2)
 
-    # IF STATE OF FIRST TWO QUBITS IS 11, APPLY Y TO THIRD QUBIT
     qp.ctrl(qp.PauliY, control=[0, 1], control_values=[1, 1])(wires=2)
 
     return qp.state()
@@ -387,10 +361,299 @@ def apply_control_sequence(state):
 
 print(apply_control_sequence(state))
 
-# I.15.1 ====
+# A.1.1 ====
 
+n_bits = 4
+dev = qp.device("default.qubit", wires=n_bits)
 
+@qp.qnode(dev)
+def naive_circuit():
+    """Create a uniform superposition and return the probabilities.
 
-# I.15.2 ====
+    Returns: 
+        array[float]: Probabilities for observing different outcomes.
+    """
+    for wire in range(n_bits):
 
+        ##################
+        # YOUR CODE HERE #
+        ##################
+        qp.Hadamard(wires=wire)
+
+    return qp.probs(wires=range(n_bits))
+
+# A.2.1 ====
+
+def oracle_matrix(combo):
+    """Return the oracle matrix for a secret combination.
+    
+    Args:
+        combo (list[int]): A list of bits representing a secret combination.
+         
+    Returns: 
+        array[float]: The matrix representation of the oracle.
+    """
+    index = np.ravel_multi_index(combo, [2]*len(combo)) # Index of solution
+    my_array = np.identity(2**len(combo)) # Create the identity matrix
+
+    ##################
+    # YOUR CODE HERE #
+    ##################
+    my_array[index, index] = -1.0
+
+    return my_array
+
+# A.2.2 ====
+
+n_bits = 4
+dev = qp.device("default.qubit", wires=n_bits)
+
+@qp.qnode(dev)
+def oracle_circuit(combo):
+    """Create a uniform superposition, apply the oracle, and return probabilities.
+    
+    Args:
+        combo (list[int]): A list of bits representing a secret combination.
+
+    Returns:
+        list[float]: The output probabilities.
+    """
+
+    ##################
+    # YOUR CODE HERE #
+    ##################
+    for wire in range(n_bits):
+        qp.Hadamard(wires=wire)
+
+    qp.QubitUnitary(oracle_matrix(combo), wires=range(n_bits))
+
+    return qp.probs(wires=range(n_bits))
+
+# A.3.1 ====
+
+n_bits = 4
+dev = qp.device("default.qubit", wires=n_bits)
+
+@qp.qnode(dev)
+def pair_circuit(x_tilde, combo):
+    """Test a pair labelled by x_tilde for the presence of a solution.
+    
+    Args:
+        x_tilde (list[int]): An (n_bits - 1)-string labelling the pair to test.
+        combo (list[int]): A secret combination of n_bits 0s and 1s.
+        
+    Returns:
+        array[float]: Probabilities on the last qubit.
+    """
+    for i in range(n_bits-1): # Initialize x_tilde part of state
+        if x_tilde[i] == 1:
+            qp.PauliX(wires=i)
+
+    ##################
+    # YOUR CODE HERE #
+    ##################
+
+    qp.Hadamard(wires=n_bits - 1)
+
+    qp.QubitUnitary(oracle_matrix(combo), wires=range(n_bits))
+
+    qp.Hadamard(wires=n_bits - 1)
+    
+    return qp.probs(wires=n_bits-1)
+
+# A.3.2 ====
+
+def pair_lock_picker(trials):
+    """Create a combo, run pair_circuit until it succeeds, and tally success rate.
+    
+    Args:
+        trials (int): Number of times to test the lock picker.
+
+    Returns:
+        float: The average number of times the lock picker uses pair_circuit.
+    """
+    x_tilde_strs = [np.binary_repr(n, n_bits-1) for n in range(2**(n_bits-1))]
+    x_tildes = [[int(s) for s in x_tilde_str] for x_tilde_str in x_tilde_strs] 
+
+    test_numbers = []
+
+    for trial in range(trials):
+        combo = secret_combo(n_bits) # Random list of bits
+        counter = 0
+        for x_tilde in x_tildes:
+            counter += 1
+
+            ##################
+            # YOUR CODE HERE #
+            ##################
+            if pair_circuit(x_tilde, combo)[1] > 0.5:
+                break
+        
+        test_numbers.append(counter)
+    return sum(test_numbers)/trials
+
+trials = 500
+output = pair_lock_picker(trials)
+
+print(f"For {n_bits} bits, it takes", output, "pair tests on average.")
+
+# A.4.1 ====
+
+n_bits = 4
+dev = qp.device("default.qubit", wires=n_bits)
+
+def multisol_oracle_matrix(combos):
+    """Return the oracle matrix for a set of solutions.
+
+    Args:
+        combos (list[list[int]]): A list of secret bit strings.
+
+    Returns:
+        array[float]: The matrix representation of the oracle.
+    """
+    indices = [np.ravel_multi_index(combo, [2]*len(combo)) for combo in combos]
+    ##################
+    # YOUR CODE HERE #
+    ##################
+    my_array = np.identity(2 ** len(combos[0]))
+    for index in indices:
+        my_array[index, index] = -1.0
+
+    return my_array
+
+@qp.qnode(dev)
+def multisol_pair_circuit(x_tilde, combos):
+    """Implements the circuit for testing a pair of combinations labelled by x_tilde.
+    
+    Args:
+        x_tilde (list[int]): An (n_bits - 1)-bit string labelling the pair to test.
+        combos (list[list[int]]): A list of secret bit strings.
+
+    Returns:
+        array[float]: Probabilities on the last qubit.
+    """
+    for i in range(n_bits-1): # Initialize x_tilde part of state
+        if x_tilde[i] == 1:
+            qp.PauliX(wires=i)
+
+    ##################
+    # YOUR CODE HERE #
+    ##################
+    qp.Hadamard(wires=n_bits - 1)
+
+    qp.QubitUnitary(multisol_oracle_matrix(combos), wires=range(n_bits))
+
+    qp.Hadamard(wires=n_bits - 1)
+    return qp.probs(wires=n_bits-1)
+
+# A.4.2 ====
+
+def parity_checker(combos):
+    """Use multisol_pair_circuit to determine the parity of a solution set.
+
+    Args:
+        combos (list[list[int]]): A list of secret combinations.
+
+    Returns: 
+        int: The parity of the solution set.
+    """
+    parity = 0
+    x_tilde_strs = [np.binary_repr(n, n_bits-1) for n in range(2**(n_bits-1))]
+    x_tildes = [[int(s) for s in x_tilde_str] for x_tilde_str in x_tilde_strs]
+    for x_tilde in x_tildes:
+
+        ##################
+        # YOUR CODE HERE #
+        ##################
+
+        # IMPLEMENT PARITY COUNTING ALGORITHM
+        if multisol_pair_circuit(x_tilde, combos)[1] > 0.5:
+            parity = (parity + 1) % 2
+
+    return parity
+
+# A.5.1 ====
+
+n_bits = 4
+dev = qp.device("default.qubit", wires=n_bits)
+
+@qp.qnode(dev)
+def hoh_circuit(combo):
+    """A circuit which applies Hadamard-oracle-Hadamard and returns probabilities.
+    
+    Args:
+        combo (list[int]): A list of bits representing a secret combination.
+
+    Returns:
+        list[float]: Measurement outcome probabilities.
+    """
+
+    ##################
+    # YOUR CODE HERE #
+    ##################
+    for wire in range(n_bits):
+        qp.Hadamard(wires=wire)
+
+    qp.QubitUnitary(oracle_matrix(combo), wires=range(n_bits))
+    for wire in range(n_bits):
+        qp.Hadamard(wires=wire)
+
+    return qp.probs(wires=range(n_bits))
+
+# A.6.1 ====
+
+n_bits = 4
+dev = qp.device("default.qubit", wires=n_bits)
+
+@qp.qnode(dev)
+def multisol_hoh_circuit(combos):
+    """A circuit which applies Hadamard, multi-solution oracle, then Hadamard.
+    
+    Args:
+        combos (list[list[int]]): A list of secret bit strings.
+
+    Returns: 
+        array[float]: Probabilities for observing different outcomes.
+    """
+
+    ##################
+    # YOUR CODE HERE #
+    ##################
+    for wire in range(n_bits):
+        qp.Hadamard(wires=wire)
+
+    qp.QubitUnitary(multisol_oracle_matrix(combos), wires=range(n_bits))
+
+    for wire in range(n_bits):
+        qp.Hadamard(wires=wire)
+
+    return qp.probs(wires=range(n_bits))
+
+# A.6.2 ====
+
+def deutsch_jozsa(promise_var):
+    """Implement the Deutsch–Jozsa algorithm and guess the promise variable.
+    
+    Args:
+        promise_var (int): Indicates whether the function is balanced (0) or constant (1).
+        
+    Returns: 
+        int: A guess at the promise variable.
+    """
+    if promise_var == 0:
+        how_many = 2**(n_bits - 1)
+    else:
+        how_many = np.random.choice([0, 2**n_bits]) # Choose all or nothing randomly
+    combos = multisol_combo(n_bits, how_many) # Generate random combinations
+
+    ##################
+    # YOUR CODE HERE #
+    ##################
+    probs = multisol_hoh_circuit(combos)
+    # If probability of measuring |00...0> is 1,  function is constant (1)
+    # If probability of measuring |00...0> is 0,  function is balanced (0)
+    if np.isclose(probs[0], 1.0):
+        return 1
+    else:
+        return 0
 
