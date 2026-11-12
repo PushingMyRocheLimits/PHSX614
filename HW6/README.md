@@ -1,1 +1,1 @@
-Homework materials for Homework 6 (Images are PennyLane screenshots and python file is the code)
+Homework materials for Homework 6 (PennyLane screenshots are in the PDF doc and python file is the code)
